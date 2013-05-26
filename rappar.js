@@ -532,10 +532,53 @@ function applyStyle(css, el, aa) {
     }
 }
 
+function applyTemplate(json) {
+    return 'define(function () { return ' + json + '});'
+}
 
+function resolvePath(fpath) {
+    var tmp = fpath.split('\\'), 
+        name = tmp[tmp.length-1], 
+        path = fpath.replace(name, ''),
+        tmp2 = name.split('.'),
+        extension = tmp2[tmp2.length-1],
+        barename = name.replace('.' + extension, '');
+    return { path: path, name: name, extension: extension, barename: barename };
+}
 
-var files = process.ARGV.slice(0);
+function toRaphael(fpath) {
+    var file = fs.readFileSync(fpath, "utf-8");
+    var svgContent = applyTemplate(JSON.stringify(rappar(file)));
+    var rpath = resolvePath(fpath), path = rpath.path, fname = rpath.barename, extension = rpath.extension, svgPath = path + fname + '.js';
+    if (extension.match(/svg/i)) {
+        fs.writeFile(svgPath, svgContent, function (err) {
+            if (err) {
+                console.log(err);
+            }
+            console.log(fpath + ' -> ' + svgPath);
+        });
+    }
+}
+
+var files = process.argv.slice(0);
 if (files.length > 2) {
-    var svg = fs.readFileSync(files[2], "utf-8");
-    console.log(JSON.stringify(rappar(svg)));
+    var svg;
+    try {
+        var fpath = files[2];
+        toRaphael(fpath);
+    }
+    catch (ex) {
+        var dir = files[2];
+        fs.readdir(dir, function (err, files) {
+            if (err) {
+                console.log(err)
+            }
+            for (var index in files) {
+                toRaphael(dir + '\\' + files[index]);
+            }
+        });
+    }
+}
+else {
+    console.log('Usage: node rappar.js test.svg or node rappar.js folder_to_convert')
 }

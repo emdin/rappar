@@ -1,1 +1,3 @@
-Usage: `node rappar.js test.svg`
+Converts SVG files into AMD-compatible Raphaël modules 
+
+Usage: `node rappar.js test.svg` or `node rappar.js folder_to_convert`
